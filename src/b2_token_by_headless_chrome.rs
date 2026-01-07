@@ -29,9 +29,13 @@ impl B2Token {
     }
 
     pub async fn get_token(&mut self) -> anyhow::Result<Option<String>> {
-        let mut options = LaunchOptions::default();
-        options.headless = true;
-        options.window_size = Some((2560, 1440));
+        // let mut options = LaunchOptions::default();
+        // options.headless = true;
+        // options.window_size = Some((2560, 1440));
+        let options = LaunchOptions::default_builder()
+            .sandbox(false)
+            .window_size(Some((2560, 1440)))
+            .build()?;
         let browser = Browser::new(options)?;
         let  tab = browser.new_tab()?;
 

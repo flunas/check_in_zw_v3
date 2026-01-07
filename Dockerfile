@@ -16,6 +16,12 @@ RUN cargo build --release --target x86_64-unknown-linux-musl
 
 FROM debian:bookworm-slim
 
+# 安装chrome依赖
+RUN apt-get update && apt-get install -y \
+    chromium \
+    chromium-driver \
+    && rm -rf /var/lib/apt/lists/*
+
 # 设置时区和更新时间
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
@@ -35,6 +41,10 @@ RUN apt-get update && \
 # 刷新字体缓存
 RUN fc-cache -fv
 
+# 设置环境变量
+ENV ELECTRON_DISABLE_SANDBOX=1
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # 创建应用目录
 RUN mkdir -p /app/config
@@ -50,4 +60,4 @@ USER appuser
 WORKDIR /app
 
 
-CMD ["check_in_zw_v3"]
+CMD ["check_in_zw_v3", "--no-sandbox"]
