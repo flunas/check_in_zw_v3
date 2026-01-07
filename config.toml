@@ -1,0 +1,16 @@
+[log]
+enable = true
+level = "info"
+
+[userinfo]
+username = "18577559312"
+password = "Flunas1230."
+url1 = "https://forum.zwsoft.cn/wp-json/b2/v1/userMission"
+url2 = "https://forum.zwsoft.cn/wp-json/b2/v1/getUserInfo"
+url3 = "https://forum.zwsoft.cn/wp-json/b2/v1/getUserMission"
+login_url = "https://accounts.zwsoft.cn/Account/Login"
+forum_url = "https://forum.zwsoft.cn/"
+chrome_driver = "http://localhost:9515"
+
+[schedule]
+cron = "10 0 0 * * *"

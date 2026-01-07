@@ -1,0 +1,17 @@
+[package]
+name = "check_in_zw_v3"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.100"
+chrono = "0.4.42"
+config = "0.15.19"
+headless_chrome = "1.0.20"
+reqwest = { version = "0.11.10", features = ["json", "rustls-tls"], default-features = false }
+serde = "1.0.228"
+thirtyfour = "0.36.1"
+tokio = { version = "1.17.0", features = ["macros", "rt-multi-thread", "signal" ] }
+tokio-cron-scheduler = "0.15.1"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.5", features = ["local-time", "time"] }
