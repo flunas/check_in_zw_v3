@@ -40,7 +40,7 @@ jobs:
         uses: redhat-actions/buildah-build@v2
         with:
           context: .
-          containerfiles: ./Dockerfile
+          containerfiles: ./Containerfile
           image: ${{ steps.image-info.outputs.GHCR_IMAGE }}
           tags: ${{ steps.image-info.outputs.SHA_TAG }} latest
 
