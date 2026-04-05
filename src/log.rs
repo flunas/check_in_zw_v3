@@ -1,5 +1,5 @@
-use tracing::Level;
-use tracing_subscriber::fmt::time::LocalTime;
+use tracing::{Level, level_filters::LevelFilter};
+use tracing_subscriber::{filter::Targets, fmt::{self, time::LocalTime}, layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::config::get_log;
 
@@ -31,9 +31,13 @@ impl MyLog {
                 "error" => Level::ERROR,
                 _ => Level::INFO,
             };
-            tracing_subscriber::fmt()
-                .with_max_level(level)
-                .with_timer(LocalTime::rfc_3339())
+            let filter = Targets::new()
+                .with_default(LevelFilter::OFF)
+                .with_target("check_in_zw_v3", level);
+            
+            tracing_subscriber::registry()
+                .with(fmt::layer().with_timer(LocalTime::rfc_3339()))
+                .with(filter)
                 .init();
         }
     }

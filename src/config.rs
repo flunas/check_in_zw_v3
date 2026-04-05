@@ -1,6 +1,7 @@
 use std::sync::{Mutex, OnceLock};
 
 use serde::{Deserialize, Serialize};
+use tracing::info;
 
 
 static MYCONFIG: OnceLock<Mutex<MyConfig>> = OnceLock::new();
@@ -38,8 +39,9 @@ pub struct LogConfig {
 impl MyConfig {
     pub fn new() -> Self {
         let config = config::Config::builder()
-            .add_source(config::File::with_name("/app/config/config.toml"))
-            .build()
+        // .add_source(config::File::with_name("/app/config/config.toml"))
+        .add_source(config::File::with_name("config.toml"))
+        .build()
             .unwrap()
             .try_deserialize::<MyConfig>()
             .unwrap();
@@ -62,6 +64,7 @@ impl MyConfig {
 pub async fn my_config_init() -> anyhow::Result<()> {
     let config = MyConfig::new();
     MYCONFIG.set(Mutex::new(config)).map_err(|_| anyhow::anyhow!("Failed to set config"))?;
+    info!("Config initialized");
     Ok(())
 }
 

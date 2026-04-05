@@ -2,9 +2,9 @@
 use chrono::Offset;
 use tokio_cron_scheduler::{Job, JobScheduler};
 
-use tracing::debug;
+use tracing::{debug, info};
 
-use crate::{b2_token_by_headless_chrome::{b2_token_init, get_b2_token}, config::get_schedule};
+use crate::{config::get_schedule};
 
 
 mod sign;
@@ -30,13 +30,12 @@ impl App {
         config::my_config_init().await?;
         // 初始化日志
         log::MyLog::new().run().await;
-        // 初始化b2_token
-        b2_token_init().await?;
 
-        // 签到-api
-        let zw = sign::Zw::new(get_b2_token().await).await;
+        // 签到api
+        let zw = sign::Zw::new().await;
 
         let cron = get_schedule().await.cron;
+        info!("Cron job started: {}", cron);
         let cron = local_cron_to_utc(cron.clone()).await;
         let job = Job::new_async(   cron.clone(), move |_uuid,_i| {
             let mut zw = zw.clone();
@@ -48,6 +47,7 @@ impl App {
         })?;
         self.scheduler.add(job).await?;
         self.scheduler.start().await?;
+        
 
         // driver.screenshot(Path::new("./1.png")).await?;
         // driver.quit().await?;

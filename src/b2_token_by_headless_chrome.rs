@@ -2,7 +2,7 @@ use std::sync::{OnceLock};
 
 use headless_chrome::{Browser, LaunchOptions};
 use tokio::sync::Mutex;
-use tracing::debug;
+use tracing::{debug, error};
 
 use crate::config::get_userinfo;
 
@@ -60,7 +60,7 @@ impl B2Token {
         let mut b2_token = None;
         match cookie.iter().find(|k| k.name == "b2_token") {
             Some(k) => b2_token = Some(k.value.clone()),
-            None => println!("b2_token cookie found"),
+            None => println!("b2_token cookie not found"),
         }
         debug!("b2_token: {:?}", b2_token);
         Ok(b2_token)
@@ -68,6 +68,7 @@ impl B2Token {
 }
 
 pub async fn b2_token_init() -> anyhow::Result<()> {
+    debug!("初始化b2_token");
     let b2_token = B2Token::new().await;
     B2_TOKEN.set(Mutex::new(b2_token)).map_err(|_| anyhow::anyhow!("Failed to set b2_token"))?;
     Ok(())
@@ -75,5 +76,16 @@ pub async fn b2_token_init() -> anyhow::Result<()> {
 
 pub async fn get_b2_token() -> Option<String> {
     let mut b2_token = B2_TOKEN.get().unwrap().lock().await;
-    b2_token.get_token().await.unwrap()
+    // b2_token.get_token().await.unwrap()
+    match b2_token.get_token().await {
+        Ok(v) => v,
+        Err(e) => {
+            if e.to_string().contains("net::ERR_INTERNET_DISCONNECTED") {
+                error!("网络错误，稍后重试");
+            } else {
+                error!("error: {:?}", e);
+            }
+            None
+        },
+    }
 }

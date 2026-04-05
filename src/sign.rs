@@ -1,9 +1,12 @@
 
+use std::time::Duration;
+
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use tracing::{debug, info};
+use tokio::time::sleep;
+use tracing::{debug, error, info};
 
-use crate::{b2_token_by_headless_chrome::get_b2_token, config::{UserinfoConfig, get_userinfo}};
+use crate::{b2_token_by_headless_chrome::{b2_token_init, get_b2_token}, config::{UserinfoConfig, get_userinfo}};
 
 #[allow(unused)]
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
@@ -131,10 +134,13 @@ pub struct Zw {
 }
 
 impl Zw {
-    pub async fn new(b2_token: Option<String>) -> Self {
+    pub async fn new() -> Self {
+        if let Err(e) = b2_token_init().await {
+            error!("B2_token init error: {}", e.to_string());
+        }
         let userinfo = get_userinfo().await;
         Self {
-            b2_token,
+            b2_token: None,
             userinfo,
             status: false,
             credit: "".to_string(),
@@ -145,13 +151,46 @@ impl Zw {
     }
 
     pub async fn run(&mut self) -> anyhow::Result<()> {
-        // 执行状态检测
-        self.check_status().await?;
-        while !self.status {
-            self.sign_in().await?;
+        debug!("Starting sign...");
+        loop {
+            self.check_status().await?;
+            match self.status {
+                true => {
+                    info!("{} : {} : {}", self.user_mission.mission.date, self.user_mission.mission.credit, self.user_mission.mission.my_credit);
+                    break;
+                },
+                false => {
+                    self.check_b2_token().await?;
+                },
+            }
         }
-        info!("{} : {} : {}", self.user_mission.mission.date, self.user_mission.mission.credit, self.user_mission.mission.my_credit);
         Ok(())
+    }
+
+    async fn check_b2_token(&mut self) -> anyhow::Result<()> {
+        debug!("Checking b2_token...");
+        if self.b2_token.is_none() {
+            self.get_b2_token().await?;
+        }
+        self.sign_in().await?;
+        Ok(())
+    }
+
+    async fn get_b2_token(&mut self) -> anyhow::Result<()> {
+        debug!("Getting b2_token...");
+        loop {
+            let b2_token = get_b2_token().await;
+            match b2_token {
+                Some(v) => {
+                    self.b2_token = Some(v);
+                    return Ok(());
+                },
+                None => {
+                    error!("b2_token 为 null,10分钟后重新获取.");
+                    sleep(Duration::from_secs(600)).await;
+                },
+            }
+        }
     }
 
     async fn check_status(&mut self) -> anyhow::Result<()> {
@@ -181,8 +220,7 @@ impl Zw {
             Err(e) => {
                 debug!("Error signing in: {}", e.to_string());
                 debug!("get b2_token and try again");
-                self.b2_token = get_b2_token().await;
-                self.get_user_mission().await?;
+                self.b2_token = None;
                 Ok(())
             }
         }
@@ -213,7 +251,6 @@ impl Zw {
                 GetUserMission::default()
             }
         };
-        self.check_status().await?;
         Ok(())
     }
 }
