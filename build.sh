@@ -22,16 +22,16 @@ cargo build --release
 
 echo "✅ 构建完成！二进制文件在 target/release/ 目录中"
 
-# 检查是否安装了 Docker
-echo "🚀 检查是否安装了 Docker..."
-if ! command -v docker &> /dev/null; then
-    echo "❌ 未安装 Docker, 请先安装 Docker: https://docs.docker.com/get-docker/"
+# 检查是否安装了 Podman
+echo "🚀 检查是否安装了 Podman..."
+if ! command -v podman &> /dev/null; then
+    echo "❌ 未安装 Podman, 请先安装 Podman"
     exit 1
 fi
 
 # 构建镜像
 echo "🚀 构建镜像..."
-docker build -t $PROJECT_NAME:latest .
+podman build -t $PROJECT_NAME:latest .
 
 echo "✅ 镜像构建完成！"
 
@@ -64,10 +64,10 @@ cd ..
 rm -rf get_docker_image_latest_tag
 
 # 修改镜像tag name
-docker tag $PROJECT_NAME:latest $LIBRARY_NAME/$PROJECT_NAME:$NEW_VERSION
+podman tag $PROJECT_NAME:latest $LIBRARY_NAME/$PROJECT_NAME:$NEW_VERSION
 echo "🚀 修改镜像tag为 $LIBRARY_NAME/$PROJECT_NAME:$NEW_VERSION"
 
 # 推送镜像
 echo "🚀 推送镜像..."
-docker push $LIBRARY_NAME/$PROJECT_NAME:$NEW_VERSION
+podman push $LIBRARY_NAME/$PROJECT_NAME:$NEW_VERSION
 echo "✅ 镜像推送完成！"
