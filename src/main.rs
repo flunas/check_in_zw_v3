@@ -8,7 +8,7 @@ async fn main() -> anyhow::Result<()> {
 
     tokio::signal::ctrl_c().await?;
     my_app.stop().await?;
-    info!("程序退出");
+    info!("程序退出!");
 
     Ok(())
 }
