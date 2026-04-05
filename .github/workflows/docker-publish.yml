@@ -28,7 +28,7 @@ jobs:
             type=sha,prefix=
             type=raw,value=latest,enable={{is_default_branch}}
           flavor: |
-            latest=true
+            latest=false
 
       # 3. 登录容器注册表
       - name: 登录到 GitHub 容器注册表
