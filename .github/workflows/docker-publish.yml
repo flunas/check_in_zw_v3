@@ -12,6 +12,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       # 1. 检出代码
       - name: 检出代码
@@ -48,6 +50,6 @@ jobs:
       - name: 推送到 GitHub 容器注册表
         uses: redhat-actions/push-to-registry@v2
         with:
-          image: ${{ steps.image-info.outputs.GHCR_IMAGE }}
+          image: ${{ steps.image-info.outputs.IMAGE_NAME }}
           tags: ${{ steps.image-info.outputs.SHA_TAG }} latest
           registry: ghcr.io/${{ github.repository_owner }}
