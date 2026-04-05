@@ -39,8 +39,8 @@ pub struct LogConfig {
 impl MyConfig {
     pub fn new() -> Self {
         let config = config::Config::builder()
-        // .add_source(config::File::with_name("/app/config/config.toml"))
-        .add_source(config::File::with_name("config.toml"))
+        .add_source(config::File::with_name("/app/config/config.toml"))
+        // .add_source(config::File::with_name("config.toml"))
         .build()
             .unwrap()
             .try_deserialize::<MyConfig>()
