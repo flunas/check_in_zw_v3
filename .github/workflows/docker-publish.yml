@@ -17,20 +17,17 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      # 2. 生成元数据（如标签、描述）
-      - name: Podman 元数据
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ghcr.io/${{ github.repository_owner }}/check_in_zw_v3
-          tags: |
-            type=sha,prefix=
-            type=raw,value=latest,enable={{is_default_branch}}
-          flavor: |
-            latest=false
+      # 2. 设置镜像名称和标签
+      - name: 设置镜像信息
+        id: image-info
+        run: |
+          echo "IMAGE_NAME=check_in_zw_v3" >> $GITHUB_OUTPUT
+          echo "GHCR_IMAGE=ghcr.io/${{ github.repository_owner }}/check_in_zw_v3" >> $GITHUB_OUTPUT
+          SHA_TAG=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "SHA_TAG=$SHA_TAG" >> $GITHUB_OUTPUT
+          echo "构建的镜像标签: $SHA_TAG"
 
-      # 3. 登录容器注册表
+      # 3. 登录到 GitHub 容器注册表
       - name: 登录到 GitHub 容器注册表
         uses: redhat-actions/podman-login@v1
         with:
@@ -38,18 +35,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      # 4. 构建并推送镜像
-      - name: 构建并推送镜像
+      # 4. 使用 Buildah 构建镜像
+      - name: 使用 Buildah 构建镜像
         uses: redhat-actions/buildah-build@v2
         with:
           context: .
-          containerfiles: ./Containerfile
-          image: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          containerfiles: ./Dockerfile
+          image: ${{ steps.image-info.outputs.GHCR_IMAGE }}
+          tags: ${{ steps.image-info.outputs.SHA_TAG }} latest
 
-      #- name: 推送到 GitHub 容器注册表
-      #  uses: redhat-actions/push-to-registry@v2
-       # with:
-      #    image: ${{ steps.meta.outputs.tags }}
-       #   tags: ${{ steps.meta.outputs.tags }}
-       #   registry: ghcr.io/${{ github.repository_owner }}
+      # 5. 推送到 GitHub 容器注册表
+      - name: 推送到 GitHub 容器注册表
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.image-info.outputs.GHCR_IMAGE }}
+          tags: ${{ steps.image-info.outputs.SHA_TAG }} latest
+          registry: ghcr.io/${{ github.repository_owner }}
